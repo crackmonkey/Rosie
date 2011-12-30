@@ -120,8 +120,7 @@ class InsteonHandler:
 	"""Sends SendX10 and insteon events out to the world via the PLM
 	Also, generates X10 & insteon messages from data received from the PLM
 	"""
-	def __init__(self, diety, dev):
-		self.diety = diety
+	def __init__(self, rosie, dev='/dev/ttyS0'):
 		self.s = Serial(dev,
 			 baudrate=19200,        #baudrate
 			 bytesize=EIGHTBITS,    #number of databits
@@ -131,7 +130,7 @@ class InsteonHandler:
 			 xonxoff=0,             #enable software flow control
 			 rtscts=0,              #enable RTS/CTS flow control
 		       )
-		diety.add_io_handler(self.s.fileno(), self.input_handler)
+		rosie.add_io_handler(self.s, self.input_handler)
 
 		pub.subscribe(self.insteon_event_handler, 'insteon')
 		pub.subscribe(self.sendX10_event_handler, 'SendX10')

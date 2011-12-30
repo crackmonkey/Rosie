@@ -6,6 +6,7 @@ sys.path.append('PyPubSub-3.1.2-py2.6.egg')
 from pubsub import pub
 
 import handlers.insteon
+import handlers.tcpsocket
 
 def tracelogger(topic=pub.AUTO_TOPIC, **kwargs):
 	"""Dump what pubsub is doing"""
@@ -15,8 +16,8 @@ def stdinhandler(fd, event):
 	sys.stdin.read(1)
 	pub.sendMessage('SendX10', addr='L5', command='On')
 
-class Diety():
-	FDs = {}
+class Rosie():
+	FDs = {} # By FDs I really mean file-like objects
 	timers = []
 
 	def __init__(self):
@@ -26,8 +27,10 @@ class Diety():
 		pub.sendMessage('lifecycle', msg='Starting up')
 
 		# Register modules
-		handlers.insteon.InsteonHandler(self, '/dev/ttyS0')
-		self.add_io_handler(sys.stdin.fileno(), stdinhandler)
+		handlers.insteon.InsteonHandler(self, dev='/dev/ttyS0')
+		handlers.tcpsocket.TCPHandler(self, port=2062)
+
+		#self.add_io_handler(sys.stdin.fileno(), stdinhandler)
 
 		# load configs?
 
@@ -38,7 +41,10 @@ class Diety():
 				active=self.poller.poll()
 				for (fd, event) in active:
 					# Call the FD event handler
-					self.FDs[fd](fd, event)
+					for i in self.FDs:
+						if i.fileno() == fd:
+							self.FDs[i](i, event)
+							break
 			except KeyboardInterrupt:
 				break
 
@@ -51,11 +57,11 @@ class Diety():
 		self.poller.register(fd, select.POLLIN)
 		self.FDs[fd] = handler
 
-	def remove_io_handler(self, fd, handler):
+	def remove_io_handler(self, fd):
 		"""Unregister a file descriptor from polling"""
 		self.poller.unregister(fd)
 		del self.FDs[fd]
 
 
 if __name__ == '__main__':
-	dog = Diety()
+	dog = Rosie()

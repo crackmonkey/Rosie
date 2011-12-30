@@ -28,10 +28,10 @@ class TCPHandler:
 
 	def request_handler(self, fd, event):
 		data = fd.recv(4096)
-		pub.sendMessage('TRACE.TCPSocket', msg="Event: %i, len: %i" % (event, len(data)))
 		if not data: # No more data, we're done
 			self.rosie.remove_io_handler(fd)
 			fd.close()
 		args = data.strip().split(' ')
+		pub.sendMessage('TRACE.TCPSocket', msg=('Received: "%s"' % data ))
 		if args[0] == 'X10':
 			pub.sendMessage('SendX10', addr=args[1], command=args[2])
