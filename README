@@ -1,0 +1,2 @@
+It's a framework for handling events, like time, or X10 & Insteon commands.
+MrHouse is kinda sorta what I want, but with icky perl and a nasty polling loop
