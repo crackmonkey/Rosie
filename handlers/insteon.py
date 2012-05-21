@@ -120,6 +120,8 @@ class InsteonHandler:
 	"""Sends SendX10 and insteon events out to the world via the PLM
 	Also, generates X10 & insteon messages from data received from the PLM
 	"""
+
+	last_X10_addr = ''
 	def __init__(self, rosie, dev='/dev/ttyS0'):
 		self.s = Serial(dev,
 			 baudrate=19200,        #baudrate
@@ -138,20 +140,34 @@ class InsteonHandler:
 	def sendX10_event_handler(self, addr, command):
 		if command in X10.Command:
 			self.SendX10(addr, command)
+			# Post the X10 message for other things to notice
+			pub.sendMessage('X10.%s' % addr, command=command)
 
 	def insteon_event_handler(self, addr, command):
 		print "Got Insteon Event for", addr, command
 
 	def input_handler(self, fd, event):
-		if event == select.POLLIN:
-			isSTX = self.s.read()
-			if isSTX == chr(STX):
-				cmd=self.s.read(1)
-				data = self.s.read(PLMMessages[ord(cmd)]['len'] - 2)
-				msg = chr(STX)+cmd+data
-				print "< " + hexdump(msg) + self.decodemsg(msg)
+		isSTX = self.s.read()
+		if isSTX == chr(STX):
+			cmd=self.s.read(1)
+			data = self.s.read(PLMMessages[ord(cmd)]['len'] - 2)
+			msg = chr(STX)+cmd+data
+			print "< " + hexdump(msg) + self.decodemsg(msg)
+		else:
+			print "Not STX! (%02X)" % ord(isSTX)
+
+		if cmd==chr(0x52):
+			housecode = (ord(msg[2]) & 0xf0) >> 4
+			lower = ord(msg[2]) & 0x0f
+			flag = ord(msg[3])
+			if flag == 0x80 and self.last_X10_addr:
+				command = X10.NibbleToCommand[lower]
+				pub.sendMessage('X10.%s' % 
+					self.last_X10_addr , command=command)
+				self.last_X10_addr = None
 			else:
-				print "Not STX! (%02X)" % ord(isSTX)
+				self.last_X10_addr = X10.NibbleToHouseCode[housecode]
+				self.last_X10_addr += str(X10.NibbleToUnitCode[lower])
 
 	def SendCommand(self, command, data):
 		msg = pack('BB', STX, PLMCommands[command]) + data

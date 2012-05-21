@@ -5,8 +5,12 @@ import select
 sys.path.append('PyPubSub-3.1.2-py2.6.egg')
 from pubsub import pub
 
+from handlers.arduino import Arduino
+from handlers.light import Light
+from handlers.zabbixpush import ZabbixPush
 import handlers.insteon
 import handlers.tcpsocket
+from devices.X10 import X10
 
 def tracelogger(topic=pub.AUTO_TOPIC, **kwargs):
 	"""Dump what pubsub is doing"""
@@ -29,6 +33,12 @@ class Rosie():
 		# Register modules
 		handlers.insteon.InsteonHandler(self, dev='/dev/ttyS0')
 		handlers.tcpsocket.TCPHandler(self, port=2062)
+		Arduino(self,dev='/dev/ttyACM0')
+		holdme = Light(self)
+		holdme2 = ZabbixPush(self)
+
+		testdev = X10('fishtank', 'L4', False)
+
 
 		#self.add_io_handler(sys.stdin.fileno(), stdinhandler)
 
