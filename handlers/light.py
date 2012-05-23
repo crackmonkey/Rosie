@@ -13,9 +13,12 @@ class Light:
 		pub.subscribe(self.photo_handler, 'photo')
 
 	def photo_handler(self, level):
-		if (level > 750 and self.last_level < 750):
+		if (level >= 750 and self.last_level < 750):
 			pub.sendMessage('SendX10', addr='L4', command='On')
-		elif (self.last_level > 750):
+			self.last_level = level
+			return
+		if (level < 750 and self.last_level >= 750):
 			pub.sendMessage('SendX10', addr='L4', command='Off')
-		self.last_level = level
+			self.last_level = level
+			return
 

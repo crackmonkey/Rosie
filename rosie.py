@@ -12,9 +12,14 @@ import handlers.insteon
 import handlers.tcpsocket
 from devices.X10 import X10
 
+logfile = open('debug.log', 'w')
+
 def tracelogger(topic=pub.AUTO_TOPIC, **kwargs):
 	"""Dump what pubsub is doing"""
-	print "TRACE:",topic,kwargs
+	logline = "TRACE:{topic}:{data}\n".format(topic=topic,data=kwargs)
+	print logline,
+	logfile.write(logline)
+	logfile.flush()
 
 def stdinhandler(fd, event):
 	sys.stdin.read(1)

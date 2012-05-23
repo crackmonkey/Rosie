@@ -12,7 +12,7 @@ class Arduino:
 		self.last_values = {}
 
                 self.s = Serial(dev,
-                         baudrate=9600,        #baudrate
+                         baudrate=115200,        #baudrate
                          bytesize=EIGHTBITS,    #number of databits
                          parity=PARITY_NONE,    #enable parity checking
                          stopbits=STOPBITS_ONE, #number of stopbits
@@ -25,23 +25,30 @@ class Arduino:
 
 	def input_handler(self, fd, event):
 		for ln in self.s:
-			(key,val) = ln.split(':', 1)
-			if (not self.last_values.has_key(key)):
-				 self.last_values[key] = 0;
-			if (val == self.last_values[key]):
-				continue # nevermind
-			
-			if (key == 'photo'):
-				pub.sendMessage(key, level=int(val))
-			if (key == 'RH'):
-				val = round(float(val),1)
-				pub.sendMessage(key, humidity=val)
-			if (key.startswith('temp')):
-				pub.sendMessage(key, \
-					tempC=float(val),
-					tempF=float(val)*(9.0/5.0)+32
-					)
+			try:
+				(key,val) = ln.split(':', 1)
+				
+				if (not self.last_values.has_key(key)):
+					 self.last_values[key] = 0;
+				if (val == self.last_values[key]):
+					continue # nevermind
+				
+				if (key == 'photo'):
+					pub.sendMessage(key, level=int(val))
+				if (key == 'RH'):
+					rounded = round(float(val),1)
+					pub.sendMessage(key, humidity=rounded)
+				if (key.startswith('temp')):
+					if (float(val) > 50):
+						pub.sendMessage('debug', msg=ln)
+					pub.sendMessage(key, \
+						tempC=float(val),
+						tempF=float(val)*(9.0/5.0)+32
+						)
 
-			self.last_values[key] = val
+				self.last_values[key] = val
+			except ValueError:
+				pub.sendMessage('debug', msg=ln)
+				continue
 		
 
