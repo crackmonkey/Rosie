@@ -30,15 +30,15 @@ class Arduino:
 				
 				if (not self.last_values.has_key(key)):
 					 self.last_values[key] = 0;
-				if (val == self.last_values[key]):
-					continue # nevermind
+				#if (val == self.last_values[key]):
+				#	continue # nevermind
 				
 				if (key == 'photo'):
 					pub.sendMessage(key, level=int(val))
 				if (key == 'RH'):
 					rounded = round(float(val),1)
 					pub.sendMessage(key, humidity=rounded)
-				if (key.startswith('temp')):
+				if (key.startswith('temp.')):
 					if (float(val) > 50):
 						pub.sendMessage('debug', msg=ln)
 					pub.sendMessage(key, \

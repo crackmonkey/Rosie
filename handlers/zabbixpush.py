@@ -11,8 +11,8 @@ class ZabbixPush:
 		self.last_level = 0;
 
 		pub.subscribe(self.photo_handler, 'photo')
-		pub.subscribe(self.temp1_handler, 'temp1')
-		pub.subscribe(self.temp2_handler, 'temp2')
+		pub.subscribe(self.temp1_handler, 'temp.thermistor')
+		pub.subscribe(self.temp2_handler, 'temp.tmp36')
 		pub.subscribe(self.humidity_handler, 'RH')
 
 	def photo_handler(self, level):
@@ -20,9 +20,9 @@ class ZabbixPush:
 	def humidity_handler(self, humidity):
 		self.zabbix_push('humidity', humidity)
 	def temp1_handler(self, tempC, tempF):
-		self.zabbix_push('temp1', tempF)
+		self.zabbix_push('temp.thermistor', tempF)
 	def temp2_handler(self, tempC, tempF):
-		self.zabbix_push('temp2', tempF)
+		self.zabbix_push('temp.tmp36', tempF)
 
 	def zabbix_push(self, key, val):
 		# The Zabbix JSON parser is picky, so we have to build the
